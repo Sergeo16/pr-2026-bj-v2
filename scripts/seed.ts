@@ -37,6 +37,14 @@ async function seed() {
   try {
     await client.query('BEGIN');
     
+    console.log('🗑️  Suppression des anciennes données...');
+    // Supprimer d'abord les votes (car ils ont ON DELETE RESTRICT sur les départements)
+    await client.query('DELETE FROM vote');
+    console.log('✓ Votes supprimés');
+    // Supprimer les départements en cascade (supprime aussi communes, arrondissements, villages, centres)
+    await client.query('DELETE FROM departement');
+    console.log('✓ Données géographiques supprimées');
+    
     console.log('📖 Lecture du fichier JSON...');
     const dataFile = readFileSync(
       join(process.cwd(), 'data', 'BENIN_centres_vote_complet.json'),

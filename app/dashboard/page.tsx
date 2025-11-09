@@ -22,13 +22,138 @@ interface DashboardData {
   byCentre: any[];
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+// Couleurs pour les légendes et barres (couleurs vives)
+const COLORS = ['#0066FF', '#00D9A5', '#FFB800', '#FF6B35'];
+const DUO_COLORS: Record<string, string> = {
+  'Duo 1': '#0066FF', // Bleu vif
+  'Duo 2': '#00D9A5', // Vert vif
+  'Duo 3': '#FFB800', // Jaune/Orange vif
+};
+
+// Fonction helper pour formater les nombres avec espace comme séparateur de milliers
+const formatNumber = (num: number): string => {
+  return num.toLocaleString('fr-FR');
+};
+
+// Composant Label adaptatif pour le camembert (responsive) - Labels à l'intérieur avec texte blanc
+const ResponsivePieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, label, windowWidth = 1024 }: any) => {
+  const RADIAN = Math.PI / 180;
+  
+  // Ajuster le rayon selon la taille de l'écran
+  const isSmallScreen = windowWidth < 640; // sm breakpoint
+  const isMediumScreen = windowWidth < 1024; // lg breakpoint
+  
+  // Réduire le rayon pour éviter les débordements
+  const radius = isSmallScreen 
+    ? innerRadius + (outerRadius - innerRadius) * 0.3
+    : isMediumScreen
+    ? innerRadius + (outerRadius - innerRadius) * 0.4
+    : innerRadius + (outerRadius - innerRadius) * 0.5;
+  
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  
+  const percentage = (percent * 100).toFixed(1);
+  
+  // Taille de police adaptative
+  const fontSize = isSmallScreen ? '10px' : isMediumScreen ? '12px' : '14px';
+  
+  return (
+    <text 
+      x={x} 
+      y={y} 
+      fill="#ffffff" 
+      textAnchor={x > cx ? 'start' : 'end'} 
+      dominantBaseline="central"
+      style={{ 
+        fontWeight: 'bold', 
+        fontSize: fontSize,
+        filter: 'drop-shadow(0 0 3px rgba(0,0,0,0.9))',
+        textShadow: '2px 2px 4px rgba(0,0,0,0.9)',
+      }}
+    >
+      {`${label}: ${percentage}%`}
+    </text>
+  );
+};
+
+// Formatter personnalisé pour la légende avec couleurs vives
+const renderLegend = (props: any) => {
+  const { payload } = props;
+  return (
+    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '20px', fontWeight: 'bold', fontSize: '15px' }}>
+      {payload.map((entry: any, index: number) => {
+        const duoColor = DUO_COLORS[entry.value] || COLORS[index % COLORS.length];
+        return (
+          <li key={`legend-${index}`} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span 
+              style={{ 
+                display: 'inline-block', 
+                width: '16px', 
+                height: '16px', 
+                backgroundColor: duoColor,
+                border: '2px solid #333',
+                borderRadius: '2px'
+              }} 
+            />
+            <span style={{ color: duoColor, fontWeight: 'bold' }}>{entry.value}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+};
+
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [filter, setFilter] = useState<'departement' | 'commune' | 'arrondissement' | 'village' | 'centre'>('departement');
   const [filterValue, setFilterValue] = useState<string>('');
   const [filteredData, setFilteredData] = useState<any[]>([]);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [windowWidth, setWindowWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 1024);
+
+  // Détecter le thème au montage et lors des changements
+  useEffect(() => {
+    const checkTheme = () => {
+      const html = document.documentElement;
+      const isDark = html.classList.contains('dark') || 
+                     window.matchMedia('(prefers-color-scheme: dark)').matches ||
+                     html.getAttribute('data-theme') === 'dark';
+      setIsDarkMode(isDark);
+    };
+    
+    checkTheme();
+    
+    // Observer les changements de thème
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme']
+    });
+    
+    // Écouter les changements de préférence système
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', checkTheme);
+    
+    return () => {
+      observer.disconnect();
+      mediaQuery.removeEventListener('change', checkTheme);
+    };
+  }, []);
+
+  // Détecter la largeur de la fenêtre pour le responsive
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    
+    // Initialiser la largeur
+    handleResize();
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     // Charger les stats initiales complètes (une seule fois)
@@ -151,51 +276,124 @@ export default function DashboardPage() {
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body p-4 sm:p-6">
           <h2 className="card-title text-xl sm:text-2xl">Nombre total de votes</h2>
-          <p className="text-2xl sm:text-3xl font-bold">{data.national.total.toLocaleString()} votes</p>
+          <p className="text-2xl sm:text-3xl font-bold">{formatNumber(data.national.total)} votes</p>
 
-          <div className="w-full overflow-x-auto">
-            <ResponsiveContainer width="100%" height={400} minHeight={300}>
-              <BarChart data={data.national.byDuo}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" angle={-45} textAnchor="end" height={80} />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="total" fill="#0088FE" />
-              </BarChart>
-            </ResponsiveContainer>
+          {/* Graphique en barres - Conteneur centré avec largeur limitée sur grands écrans */}
+          <div className="w-full flex justify-center">
+            <div className="w-full max-w-4xl">
+              <ResponsiveContainer width="100%" height={400} minHeight={300}>
+                <BarChart 
+                  data={data.national.byDuo}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                >
+                  {/* Quadrillé retiré pour un look plus épuré */}
+                  <XAxis 
+                    dataKey="label" 
+                    angle={-45} 
+                    textAnchor="end" 
+                    height={80}
+                    tick={{ 
+                      fill: isDarkMode ? '#ffffff' : '#1a1a1a', 
+                      fontWeight: 'bold', 
+                      fontSize: 13,
+                      fontStyle: 'italic'
+                    }}
+                    axisLine={{ stroke: isDarkMode ? '#4b5563' : '#e5e7eb', strokeWidth: 1 }}
+                  />
+                  <YAxis 
+                    tick={{ 
+                      fill: isDarkMode ? '#ffffff' : '#1a1a1a', 
+                      fontWeight: 'bold', 
+                      fontSize: 13,
+                      fontStyle: 'italic'
+                    }}
+                    axisLine={{ stroke: isDarkMode ? '#4b5563' : '#e5e7eb', strokeWidth: 1 }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.98)', 
+                      border: '2px solid #333',
+                      borderRadius: '10px',
+                      fontWeight: 'bold',
+                      fontSize: '14px',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                    }}
+                    cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
+                  />
+                  <Legend 
+                    content={renderLegend}
+                    wrapperStyle={{ 
+                      paddingTop: '20px'
+                    }}
+                  />
+                  <Bar 
+                    dataKey="total"
+                    radius={[8, 8, 0, 0]}
+                  >
+                    {data.national.byDuo.map((entry, index) => {
+                      const duoColor = DUO_COLORS[entry.label] || COLORS[index % COLORS.length];
+                      return <Cell key={`bar-cell-${index}`} fill={duoColor} />;
+                    })}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-            {data.national.byDuo.map((duo) => (
-              <div key={duo.id} className="stat bg-base-200 rounded-lg p-4">
-                <div className="stat-title text-sm sm:text-base">{duo.label}</div>
-                <div className="stat-value text-xl sm:text-2xl">{duo.total.toLocaleString()}</div>
-                <div className="stat-desc text-sm">{duo.percentage}%</div>
-              </div>
-            ))}
+            {data.national.byDuo.map((duo) => {
+              const duoColor = DUO_COLORS[duo.label] || COLORS[duo.id - 1] || '#666';
+              return (
+                <div key={duo.id} className="stat bg-base-200 rounded-lg p-4 border-2 flex flex-col items-center justify-center text-center" style={{ borderColor: duoColor }}>
+                  <div 
+                    className="stat-title text-sm sm:text-base font-bold" 
+                    style={{ color: duoColor }}
+                  >
+                    {duo.label}
+                  </div>
+                  <div className="stat-value text-xl sm:text-2xl">{formatNumber(duo.total)}</div>
+                  <div 
+                    className="stat-desc text-sm font-bold" 
+                    style={{ color: duoColor, fontSize: '1.1rem' }}
+                  >
+                    {duo.percentage}%
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          <div className="w-full overflow-x-auto">
-            <ResponsiveContainer width="100%" height={300} minHeight={250}>
-              <PieChart>
-                <Pie
-                  data={data.national.byDuo}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ label, percentage }) => `${label}: ${percentage}%`}
-                  outerRadius={60}
-                  fill="#8884d8"
-                  dataKey="total"
-                >
-                  {data.national.byDuo.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+          {/* Graphique en camembert - Responsive avec marges adaptatives */}
+          <div className="w-full flex justify-center px-2 sm:px-4">
+            <div className="w-full max-w-full sm:max-w-2xl">
+              <ResponsiveContainer width="100%" height={windowWidth && windowWidth < 640 ? 250 : windowWidth && windowWidth < 1024 ? 300 : 350}>
+                <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                  <Pie
+                    data={data.national.byDuo}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={(props) => <ResponsivePieLabel {...props} windowWidth={windowWidth || 1024} />}
+                    outerRadius={windowWidth && windowWidth < 640 ? 60 : windowWidth && windowWidth < 1024 ? 70 : 80}
+                    fill="#8884d8"
+                    dataKey="total"
+                  >
+                    {data.national.byDuo.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.98)', 
+                      border: '2px solid #333',
+                      borderRadius: '8px',
+                      fontWeight: 'bold',
+                      fontSize: '14px'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
       </div>
@@ -287,7 +485,7 @@ export default function DashboardPage() {
                       <>
                         <td>{row.name}</td>
                         <td>{row.duo_label}</td>
-                        <td>{parseInt(row.total_votes, 10).toLocaleString()}</td>
+                        <td>{formatNumber(parseInt(row.total_votes, 10))}</td>
                       </>
                     )}
                     {filter === 'commune' && (
@@ -295,7 +493,7 @@ export default function DashboardPage() {
                         <td>{row.departement_name}</td>
                         <td>{row.commune_name}</td>
                         <td>{row.duo_label}</td>
-                        <td>{parseInt(row.total_votes, 10).toLocaleString()}</td>
+                        <td>{formatNumber(parseInt(row.total_votes, 10))}</td>
                       </>
                     )}
                     {filter === 'arrondissement' && (
@@ -304,7 +502,7 @@ export default function DashboardPage() {
                         <td>{row.commune_name}</td>
                         <td>{row.arrondissement_name}</td>
                         <td>{row.duo_label}</td>
-                        <td>{parseInt(row.total_votes, 10).toLocaleString()}</td>
+                        <td>{formatNumber(parseInt(row.total_votes, 10))}</td>
                       </>
                     )}
                     {filter === 'village' && (
@@ -314,7 +512,7 @@ export default function DashboardPage() {
                         <td>{row.arrondissement_name}</td>
                         <td>{row.village_name}</td>
                         <td>{row.duo_label}</td>
-                        <td>{parseInt(row.total_votes, 10).toLocaleString()}</td>
+                        <td>{formatNumber(parseInt(row.total_votes, 10))}</td>
                       </>
                     )}
                     {filter === 'centre' && (
@@ -325,7 +523,7 @@ export default function DashboardPage() {
                         <td>{row.village_name}</td>
                         <td>{row.centre_name}</td>
                         <td>{row.duo_label}</td>
-                        <td>{parseInt(row.total_votes, 10).toLocaleString()}</td>
+                        <td>{formatNumber(parseInt(row.total_votes, 10))}</td>
                       </>
                     )}
                   </tr>
