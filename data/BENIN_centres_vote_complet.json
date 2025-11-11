@@ -30697,7 +30697,92 @@
           },
           "KPATABA": {
             "code": "050504",
-            "villages": {}
+            "villages": {
+              "CODJI": {
+                "code": "05050401",
+                "centres": [
+                  {
+                    "code": "0505040101",
+                    "libelle": "EPP CODJI"
+                  },
+                  {
+                    "code": "0505040102",
+                    "libelle": "MAISON DES JEUNES CODJI"
+                  }
+                ]
+              },
+              "EKPA": {
+                "code": "05050402",
+                "centres": [
+                  {
+                    "code": "0505040201",
+                    "libelle": "EPP EKPA G/A"
+                  },
+                  {
+                    "code": "0505040202",
+                    "libelle": "EPP ILETOU"
+                  }
+                ]
+              },
+              "KOUTAGO": {
+                "code": "05050403",
+                "centres": [
+                  {
+                    "code": "0505040301",
+                    "libelle": "EM KOUTAGO"
+                  },
+                  {
+                    "code": "0505040302",
+                    "libelle": "EPP KOUTAGO"
+                  }
+                ]
+              },
+              "LOZIN": {
+                "code": "05050404",
+                "centres": [
+                  {
+                    "code": "0505040401",
+                    "libelle": "EPP KPATABA G/A"
+                  }
+                ]
+              },
+              "MEDETEKPO": {
+                "code": "05050405",
+                "centres": [
+                  {
+                    "code": "0505040501",
+                    "libelle": "EPP MEDETEKPO"
+                  }
+                ]
+              },
+              "MINIKI": {
+                "code": "05050406",
+                "centres": [
+                  {
+                    "code": "0505040601",
+                    "libelle": "EPP MINIKI G/A"
+                  }
+                ]
+              },
+              "MONDJI": {
+                "code": "05050407",
+                "centres": [
+                  {
+                    "code": "0505040701",
+                    "libelle": "COLLEGE PRIVE LA REFERENCE"
+                  }
+                ]
+              },
+              "N’DASSO": {
+                "code": "05050408",
+                "centres": [
+                  {
+                    "code": "0505040801",
+                    "libelle": "EPP N'DASSO"
+                  }
+                ]
+              }
+            }
           },
           "LAHOTAN": {
             "code": "050505",

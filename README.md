@@ -774,5 +774,88 @@ git branch -M main
 git push -u origin main
 ```
 
+**Pour récupérer les changements depuis GitHub :**
+```bash
+git pull origin main
+```
 
-# pr-2026-bj
+**Pour remplacer complètement votre version locale par celle de GitHub :**
+
+⚠️ **ATTENTION :** Cette opération va **écraser toutes vos modifications locales** non sauvegardées sur GitHub. Assurez-vous d'avoir sauvegardé ou commité vos changements importants avant de continuer.
+
+**Méthode 1 : Reset complet (Recommandée si vous voulez vraiment tout écraser)**
+```bash
+# 1. Récupérer toutes les informations du dépôt distant
+git fetch origin
+
+# 2. Réinitialiser votre branche locale pour qu'elle corresponde exactement à la branche distante
+git reset --hard origin/main
+
+# 3. Nettoyer tous les fichiers non suivis (optionnel, mais recommandé)
+git clean -fd
+```
+
+**Explication :**
+- `git fetch origin` : Télécharge les dernières informations du dépôt distant sans modifier vos fichiers locaux
+- `git reset --hard origin/main` : Réinitialise votre branche locale `main` pour qu'elle corresponde exactement à `origin/main`. **Toutes vos modifications locales non commitées seront perdues**
+- `git clean -fd` : Supprime tous les fichiers et dossiers non suivis par Git (fichiers créés localement mais jamais ajoutés à Git)
+
+**Méthode 2 : Checkout direct (Alternative simple)**
+```bash
+# 1. Récupérer les dernières informations
+git fetch origin
+
+# 2. Forcer le checkout de la branche distante
+git checkout -f origin/main
+
+# 3. Déplacer votre branche locale sur cette version
+git branch -f main origin/main
+
+# 4. Revenir sur votre branche locale
+git checkout main
+```
+
+**Explication :**
+- `git fetch origin` : Télécharge les informations du dépôt distant
+- `git checkout -f origin/main` : Force le checkout de la version distante (ignore les modifications locales)
+- `git branch -f main origin/main` : Force votre branche locale `main` à pointer vers `origin/main`
+- `git checkout main` : Revenir sur votre branche locale (maintenant identique à la distante)
+
+**Méthode 3 : Supprimer et cloner à nouveau (Solution radicale)**
+```bash
+# 1. Sortir du dossier du projet
+cd ..
+
+# 2. Supprimer complètement le dossier local (⚠️ ATTENTION : tout sera supprimé)
+# Sur macOS/Linux
+rm -rf pr-2026-bj
+
+# Sur Windows (PowerShell)
+Remove-Item -Recurse -Force pr-2026-bj
+
+# 3. Cloner à nouveau depuis GitHub
+git clone https://github.com/VOTRE_USERNAME/pr-2026-bj.git
+
+# 4. Entrer dans le dossier
+cd pr-2026-bj
+```
+
+**Explication :**
+Cette méthode supprime complètement votre copie locale et la recrée depuis GitHub. C'est la méthode la plus radicale mais aussi la plus sûre pour garantir une copie identique.
+
+**Quand utiliser quelle méthode ?**
+- **Méthode 1** : Si vous êtes dans le dossier du projet et voulez rapidement synchroniser
+- **Méthode 2** : Si vous préférez une approche étape par étape
+- **Méthode 3** : Si vous avez des problèmes avec Git ou voulez repartir de zéro
+
+**💡 Astuce :** Avant d'écraser votre version locale, vous pouvez sauvegarder vos modifications :
+```bash
+# Créer une branche de sauvegarde (au cas où)
+# Sur macOS/Linux
+git branch sauvegarde-locale-$(date +%Y%m%d-%H%M%S)
+
+# Sur Windows (PowerShell)
+git branch sauvegarde-locale-$(Get-Date -Format "yyyyMMdd-HHmmss")
+
+# Puis exécuter la méthode 1 ou 2
+```
