@@ -192,6 +192,119 @@ git push -u origin main
 
 ---
 
+## 🔄 Mettre à Jour le Projet Local (Git Pull)
+
+Si le projet a été modifié sur GitHub (par vous ou d'autres collaborateurs), vous devez mettre à jour votre copie locale pour qu'elle soit exactement conforme au contenu GitHub.
+
+### Étape 1 : Vérifier l'état actuel
+
+```bash
+# Vérifier l'état de votre dépôt local
+git status
+
+# Voir les commits qui sont sur GitHub mais pas localement
+git fetch origin
+git log HEAD..origin/main --oneline
+```
+
+### Étape 2 : Mettre à jour le projet local
+
+**Si vous n'avez pas de modifications locales non commitées :**
+
+```bash
+# Récupérer les dernières modifications depuis GitHub
+git pull origin main
+
+# Ou simplement (si la branche est déjà configurée)
+git pull
+```
+
+**Si vous avez des modifications locales non commitées :**
+
+Vous avez deux options :
+
+**Option A : Sauvegarder vos modifications temporairement (recommandé)**
+
+```bash
+# Sauvegarder vos modifications dans un stash
+git stash
+
+# Mettre à jour depuis GitHub
+git pull origin main
+
+# Récupérer vos modifications sauvegardées
+git stash pop
+```
+
+**Option B : Commiter vos modifications d'abord**
+
+```bash
+# Ajouter vos modifications
+git add .
+
+# Créer un commit
+git commit -m "Description de vos modifications locales"
+
+# Mettre à jour depuis GitHub
+git pull origin main
+
+# Résoudre les conflits si nécessaire (voir section Dépannage)
+```
+
+### Étape 3 : Vérifier que tout est synchronisé
+
+```bash
+# Vérifier l'état
+git status
+
+# Voir les derniers commits
+git log --oneline -5
+
+# Vérifier que vous êtes à jour avec GitHub
+git log HEAD..origin/main --oneline
+# (Si rien ne s'affiche, vous êtes à jour)
+```
+
+### Résumé des commandes pour mettre à jour
+
+```bash
+# 1. Vérifier l'état
+git status
+
+# 2. Récupérer les informations depuis GitHub
+git fetch origin
+
+# 3. Voir ce qui va être mis à jour
+git log HEAD..origin/main --oneline
+
+# 4. Mettre à jour le projet local
+git pull origin main
+
+# 5. Vérifier que tout est synchronisé
+git status
+```
+
+### Cas particulier : Forcer la synchronisation complète
+
+**⚠️ ATTENTION : Cette commande supprime toutes vos modifications locales non commitées !**
+
+Si vous voulez que votre projet local soit **exactement** identique à GitHub (en supprimant toutes modifications locales) :
+
+```bash
+# Récupérer les dernières modifications
+git fetch origin
+
+# Réinitialiser complètement votre branche locale
+git reset --hard origin/main
+
+# Nettoyer les fichiers non suivis (optionnel)
+git clean -fd
+```
+
+**⚠️ Utilisez cette commande uniquement si vous êtes sûr de vouloir perdre toutes vos modifications locales !**
+
+---
+
 ## 📝 Commandes Utiles pour la Suite
 
 ### Voir l'état des fichiers
@@ -218,7 +331,14 @@ git push
 
 ### Récupérer les dernières modifications
 ```bash
+# Méthode simple (si pas de modifications locales)
 git pull
+
+# Méthode recommandée (vérifie d'abord ce qui va être mis à jour)
+git fetch origin
+git pull origin main
+
+# Voir la section "Mettre à Jour le Projet Local (Git Pull)" ci-dessus pour plus de détails
 ```
 
 ### Voir l'historique des commits
