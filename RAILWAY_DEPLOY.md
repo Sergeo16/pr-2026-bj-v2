@@ -183,28 +183,41 @@ railway login
 3. Liez votre projet :
 ```bash
 railway link
+# Sélectionnez votre projet et environnement
+# ⚠️ IMPORTANT : Sélectionnez le service WEB (pas Postgres) ou appuyez sur ESC pour ne pas sélectionner de service
 ```
 
-4. Exécutez les migrations :
+4. Exécutez les migrations dans le service web :
 ```bash
+# Spécifiez explicitement le service web
+railway run --service <nom-du-service-web> npm run migrate
+
+# Ou si vous avez lié le service web, simplement :
 railway run npm run migrate
 ```
 
 5. Exécutez le seed :
 ```bash
-railway run npm run seed
+railway run --service <nom-du-service-web> npm run seed
 ```
 
-#### Option 2 : Via Railway Dashboard
+**⚠️ Important** : 
+- Vous devez exécuter les commandes dans le **service web** (pas dans le service Postgres)
+- Si vous avez lié le service Postgres par erreur, utilisez `--service` pour spécifier le service web
+- Les migrations doivent s'exécuter dans le conteneur web où `DATABASE_URL` pointe vers le service PostgreSQL interne
 
-1. Allez dans votre service web
-2. Cliquez sur **"Deployments"** → **"View Logs"**
-3. Cliquez sur **"Run Command"** ou utilisez le terminal intégré
-4. Exécutez :
+#### Option 2 : Via Railway Dashboard (Plus Simple - Recommandé)
+
+1. Allez dans votre **service web** (pas le service Postgres)
+2. Cliquez sur **"Deployments"** → Sélectionnez le dernier déploiement
+3. Cliquez sur **"View Logs"** ou **"Shell"** / **"Run Command"**
+4. Exécutez les commandes dans le terminal intégré :
 ```bash
 npm run migrate
 npm run seed
 ```
+
+**✅ Cette méthode est recommandée** car elle exécute les commandes directement dans le conteneur web où toutes les variables d'environnement sont correctement configurées.
 
 ### Étape 6 : Configurer le Domaine Public
 
@@ -270,6 +283,36 @@ main();
 1. Vérifiez que le service PostgreSQL est démarré
 2. Vérifiez que `DATABASE_URL` utilise la référence correcte : `${{Postgres.DATABASE_URL}}`
 3. Vérifiez que les migrations ont été exécutées
+
+### Erreur "ENOTFOUND postgres.railway.internal" avec Railway CLI
+
+Si vous obtenez cette erreur lors de l'exécution de `railway run npm run migrate` :
+
+**Cause** : La commande s'exécute localement avec les variables Railway, mais `postgres.railway.internal` n'est accessible que depuis les conteneurs Railway.
+
+**Solutions** :
+
+1. **Utiliser le Dashboard Railway** (Recommandé) :
+   - Allez dans votre service web → **"Deployments"** → **"Shell"** ou **"Run Command"**
+   - Exécutez `npm run migrate` et `npm run seed` directement dans le terminal intégré
+
+2. **Spécifier le service web avec Railway CLI** :
+   ```bash
+   # Voir les services disponibles
+   railway service
+   
+   # Exécuter dans le service web (remplacez <nom-service-web> par le nom réel)
+   railway run --service <nom-service-web> npm run migrate
+   railway run --service <nom-service-web> npm run seed
+   ```
+
+3. **Relier le bon service** :
+   ```bash
+   railway link
+   # Sélectionnez votre projet
+   # Sélectionnez l'environnement (production)
+   # ⚠️ IMPORTANT : Sélectionnez le service WEB (pas Postgres) ou appuyez sur ESC
+   ```
 
 ### Build échoue
 
