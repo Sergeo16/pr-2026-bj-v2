@@ -60,10 +60,10 @@ EXPOSE 3000
 
 # Utiliser la variable PORT fournie par Railway (défaut: 3000)
 # Ne pas forcer PORT=3000 pour permettre à Railway de définir son propre port
+# Next.js standalone utilise automatiquement PORT et HOSTNAME
 ENV HOSTNAME "0.0.0.0"
 
 # Avec Next.js standalone, server.js est à la racine après copie
-# Utiliser le script de démarrage personnalisé pour garantir l'écoute sur 0.0.0.0
-# Le script start-server.js est déjà copié avec les autres scripts (ligne 45)
-CMD ["node", "scripts/start-server.js"]
+# Next.js standalone devrait automatiquement utiliser PORT et HOSTNAME
+CMD ["node", "server.js"]
 
