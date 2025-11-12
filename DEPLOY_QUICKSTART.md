@@ -48,32 +48,77 @@ PORT=3000
 
 Une fois l'application déployée, exécutez les migrations :
 
-**Option A : Via Railway CLI**
+**⭐ Option A : Via Railway CLI avec Shell Interactif (RECOMMANDÉ)**
+
+Cette méthode ouvre un shell interactif directement dans le conteneur Railway.
+
+1. **Installez Railway CLI** (si pas déjà fait) :
+   ```bash
+   npm install -g @railway/cli
+   ```
+
+2. **Connectez-vous** :
+   ```bash
+   railway login
+   ```
+
+3. **Liez votre projet** (sélectionnez le service WEB, pas Postgres) :
+   ```bash
+   railway link
+   ```
+
+4. **Ouvrez un shell interactif dans le conteneur** :
+   ```bash
+   railway shell
+   ```
+   ⚠️ **Important** : Si vous avez plusieurs services, spécifiez le service web :
+   ```bash
+   railway shell --service pr-2026-bj-v2
+   ```
+
+5. **Dans le shell interactif, exécutez les migrations** :
+   ```bash
+   npm run migrate
+   ```
+
+6. **Puis exécutez le seed** :
+   ```bash
+   npm run seed
+   ```
+
+7. **Quittez le shell** :
+   ```bash
+   exit
+   ```
+
+**Alternative : Via le Dashboard Railway**
+
+Si votre plan Railway inclut cette fonctionnalité :
+1. Allez dans votre service web → **"Deployments"**
+2. Cliquez sur le **dernier déploiement**
+3. Cherchez un onglet **"Shell"**, **"Terminal"**, **"Console"** ou **"Run Command"**
+4. Si disponible, exécutez `npm run migrate` puis `npm run seed`
+
+**Option B : Via Railway CLI (Alternative)**
+
+⚠️ **Note** : Cette méthode peut avoir des problèmes car `railway run` exécute parfois les commandes localement. Si vous rencontrez des erreurs, utilisez l'Option A.
+
 ```bash
 # Installer Railway CLI
-# Windows PowerShell:
-iwr https://railway.app/install.sh | iex
-
-# macOS/Linux:
-curl -fsSL https://railway.app/install.sh | sh
+npm install -g @railway/cli
 
 # Se connecter
 railway login
 
-# Lier le projet
+# Lier le projet (sélectionnez le service WEB, pas Postgres)
 railway link
 
-# Exécuter les migrations
-railway run npm run migrate
-
-# Exécuter le seed
-railway run npm run seed
+# Spécifier explicitement le service web pour exécuter dans le conteneur
+railway run --service pr-2026-bj-v2 npm run migrate
+railway run --service pr-2026-bj-v2 npm run seed
 ```
 
-**Option B : Via le Dashboard Railway**
-1. Allez dans votre service web → **"Deployments"**
-2. Cliquez sur **"View Logs"** → **"Run Command"**
-3. Exécutez : `npm run migrate` puis `npm run seed`
+**Si vous obtenez des erreurs avec Railway CLI**, utilisez l'Option A (Dashboard Railway) qui est plus fiable.
 
 ### 5. Configurer le Domaine
 
