@@ -50,11 +50,11 @@ const ResponsivePieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percen
   const isSmallScreen = windowWidth < 640; // sm breakpoint
   const isMediumScreen = windowWidth < 1024; // lg breakpoint
   
-  // Réduire le rayon pour éviter les débordements
+  // Réduire encore plus le rayon pour éviter les débordements sur petits écrans
   const radius = isSmallScreen 
-    ? innerRadius + (outerRadius - innerRadius) * 0.3
+    ? innerRadius + (outerRadius - innerRadius) * 0.25  // Réduit de 0.3 à 0.25
     : isMediumScreen
-    ? innerRadius + (outerRadius - innerRadius) * 0.4
+    ? innerRadius + (outerRadius - innerRadius) * 0.35  // Réduit de 0.4 à 0.35
     : innerRadius + (outerRadius - innerRadius) * 0.5;
   
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -62,8 +62,13 @@ const ResponsivePieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percen
   
   const percentage = (percent * 100).toFixed(1);
   
-  // Taille de police adaptative
-  const fontSize = isSmallScreen ? '10px' : isMediumScreen ? '12px' : '14px';
+  // Taille de police adaptative - encore plus petite sur petits écrans
+  const fontSize = isSmallScreen ? '9px' : isMediumScreen ? '11px' : '14px';
+  
+  // Raccourcir le label sur petits écrans si nécessaire
+  const displayLabel = isSmallScreen && label.length > 15 
+    ? label.substring(0, 12) + '...' 
+    : label;
   
   return (
     <text 
@@ -79,7 +84,7 @@ const ResponsivePieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percen
         textShadow: '2px 2px 4px rgba(0,0,0,0.9)',
       }}
     >
-      {`${label}: ${percentage}%`}
+      {`${displayLabel}: ${percentage}%`}
     </text>
   );
 };
@@ -384,17 +389,23 @@ export default function DashboardPage() {
           </div>
 
           {/* Graphique en camembert - Responsive avec marges adaptatives et centré */}
-          <div className="w-full flex justify-center px-2 sm:px-4 mt-6">
-            <div className="w-full max-w-full sm:max-w-2xl flex justify-center">
-              <ResponsiveContainer width="100%" height={windowWidth && windowWidth < 640 ? 250 : windowWidth && windowWidth < 1024 ? 300 : 350}>
-                <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+          <div className="w-full flex justify-center px-2 sm:px-4 mt-6 overflow-hidden">
+            <div className="w-full max-w-full sm:max-w-2xl flex justify-center overflow-hidden">
+              <ResponsiveContainer width="100%" height={windowWidth && windowWidth < 640 ? 220 : windowWidth && windowWidth < 1024 ? 300 : 350}>
+                <PieChart margin={
+                  windowWidth && windowWidth < 640 
+                    ? { top: 5, right: 5, bottom: 5, left: 5 }  // Marges réduites sur petits écrans
+                    : windowWidth && windowWidth < 1024
+                    ? { top: 10, right: 10, bottom: 10, left: 10 }
+                    : { top: 10, right: 10, bottom: 10, left: 10 }
+                }>
                   <Pie
                     data={data.national.byDuo}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
                     label={(props) => <ResponsivePieLabel {...props} windowWidth={windowWidth || 1024} />}
-                    outerRadius={windowWidth && windowWidth < 640 ? 60 : windowWidth && windowWidth < 1024 ? 70 : 80}
+                    outerRadius={windowWidth && windowWidth < 640 ? 50 : windowWidth && windowWidth < 1024 ? 70 : 80}  // Réduit de 60 à 50 sur petits écrans
                     fill="#8884d8"
                     dataKey="total"
                   >
@@ -408,7 +419,7 @@ export default function DashboardPage() {
                       border: '2px solid #333',
                       borderRadius: '8px',
                       fontWeight: 'bold',
-                      fontSize: '14px'
+                      fontSize: windowWidth && windowWidth < 640 ? '12px' : '14px'
                     }}
                     formatter={(value: any, name: string) => {
                       const entry = data.national.byDuo.find(d => d.total === value);
