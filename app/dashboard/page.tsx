@@ -42,7 +42,7 @@ const formatNumber = (num: number): string => {
   return num.toLocaleString('fr-FR');
 };
 
-// Composant Label adaptatif pour le camembert (responsive) - Labels à l'intérieur avec texte blanc
+// Composant Label adaptatif pour le camembert (responsive) - Labels à l'intérieur avec texte blanc sur plusieurs lignes
 const ResponsivePieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, label, windowWidth = 1024 }: any) => {
   const RADIAN = Math.PI / 180;
   
@@ -50,11 +50,11 @@ const ResponsivePieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percen
   const isSmallScreen = windowWidth < 640; // sm breakpoint
   const isMediumScreen = windowWidth < 1024; // lg breakpoint
   
-  // Réduire encore plus le rayon pour éviter les débordements sur petits écrans
+  // Réduire le rayon pour éviter les débordements
   const radius = isSmallScreen 
-    ? innerRadius + (outerRadius - innerRadius) * 0.25  // Réduit de 0.3 à 0.25
+    ? innerRadius + (outerRadius - innerRadius) * 0.3
     : isMediumScreen
-    ? innerRadius + (outerRadius - innerRadius) * 0.35  // Réduit de 0.4 à 0.35
+    ? innerRadius + (outerRadius - innerRadius) * 0.4
     : innerRadius + (outerRadius - innerRadius) * 0.5;
   
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -62,30 +62,53 @@ const ResponsivePieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percen
   
   const percentage = (percent * 100).toFixed(1);
   
-  // Taille de police adaptative - encore plus petite sur petits écrans
-  const fontSize = isSmallScreen ? '9px' : isMediumScreen ? '11px' : '14px';
+  // Taille de police adaptative
+  const fontSize = isSmallScreen ? '10px' : isMediumScreen ? '12px' : '14px';
   
-  // Raccourcir le label sur petits écrans si nécessaire
-  const displayLabel = isSmallScreen && label.length > 15 
-    ? label.substring(0, 12) + '...' 
-    : label;
+  // Diviser le label en plusieurs lignes si nécessaire (max 2 lignes)
+  const maxCharsPerLine = isSmallScreen ? 12 : isMediumScreen ? 18 : 25;
+  const splitLabel = (text: string, maxLength: number): string[] => {
+    if (text.length <= maxLength) return [text];
+    // Essayer de couper au dernier espace avant maxLength
+    const spaceIndex = text.lastIndexOf(' ', maxLength);
+    if (spaceIndex > maxLength * 0.6) {
+      return [text.substring(0, spaceIndex), text.substring(spaceIndex + 1)];
+    }
+    // Sinon couper au milieu
+    const mid = Math.floor(text.length / 2);
+    const spaceMid = text.lastIndexOf(' ', mid);
+    if (spaceMid > mid * 0.7) {
+      return [text.substring(0, spaceMid), text.substring(spaceMid + 1)];
+    }
+    return [text.substring(0, maxLength), text.substring(maxLength)];
+  };
+  
+  const labelLines = splitLabel(label, maxCharsPerLine);
+  const lineHeight = parseFloat(fontSize) * 1.2;
+  const totalHeight = labelLines.length * lineHeight;
+  const startY = y - (totalHeight / 2) + (lineHeight / 2);
   
   return (
-    <text 
-      x={x} 
-      y={y} 
-      fill="#ffffff" 
-      textAnchor={x > cx ? 'start' : 'end'} 
-      dominantBaseline="central"
-      style={{ 
-        fontWeight: 'bold', 
-        fontSize: fontSize,
-        filter: 'drop-shadow(0 0 3px rgba(0,0,0,0.9))',
-        textShadow: '2px 2px 4px rgba(0,0,0,0.9)',
-      }}
-    >
-      {`${displayLabel}: ${percentage}%`}
-    </text>
+    <g>
+      {labelLines.map((line, index) => (
+        <text
+          key={index}
+          x={x}
+          y={startY + (index * lineHeight)}
+          fill="#ffffff"
+          textAnchor="middle"
+          dominantBaseline="central"
+          style={{
+            fontWeight: 'bold',
+            fontSize: fontSize,
+            filter: 'drop-shadow(0 0 3px rgba(0,0,0,0.9))',
+            textShadow: '2px 2px 4px rgba(0,0,0,0.9)',
+          }}
+        >
+          {index === labelLines.length - 1 ? `${line}: ${percentage}%` : line}
+        </text>
+      ))}
+    </g>
   );
 };
 
@@ -391,7 +414,7 @@ export default function DashboardPage() {
           {/* Graphique en camembert - Responsive avec marges adaptatives et centré */}
           <div className="w-full flex justify-center px-2 sm:px-4 mt-6 overflow-hidden">
             <div className="w-full max-w-full sm:max-w-2xl flex justify-center overflow-hidden">
-              <ResponsiveContainer width="100%" height={windowWidth && windowWidth < 640 ? 220 : windowWidth && windowWidth < 1024 ? 300 : 350}>
+              <ResponsiveContainer width="100%" height={windowWidth && windowWidth < 640 ? 250 : windowWidth && windowWidth < 1024 ? 300 : 350}>
                 <PieChart margin={
                   windowWidth && windowWidth < 640 
                     ? { top: 5, right: 5, bottom: 5, left: 5 }  // Marges réduites sur petits écrans
@@ -405,7 +428,7 @@ export default function DashboardPage() {
                     cy="50%"
                     labelLine={false}
                     label={(props) => <ResponsivePieLabel {...props} windowWidth={windowWidth || 1024} />}
-                    outerRadius={windowWidth && windowWidth < 640 ? 50 : windowWidth && windowWidth < 1024 ? 70 : 80}  // Réduit de 60 à 50 sur petits écrans
+                    outerRadius={windowWidth && windowWidth < 640 ? 60 : windowWidth && windowWidth < 1024 ? 70 : 80}
                     fill="#8884d8"
                     dataKey="total"
                   >
