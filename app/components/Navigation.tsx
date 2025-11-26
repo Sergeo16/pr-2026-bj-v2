@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Gem, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -20,7 +20,6 @@ export default function Navigation() {
             className="flex items-center font-bold text-xl md:text-3xl"
             onClick={() => setIsOpen(false)}
           >
-            <Gem className="mr-2 text-accent" />
             PR<span className="text-accent">2026</span> BJ
           </Link>
 
